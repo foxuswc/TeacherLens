@@ -1,11 +1,12 @@
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from functools import partial
-import json, argparse
+import json, argparse, os
 from .core import ROOT, load, grade, record_review
 class Handler(SimpleHTTPRequestHandler):
     def send_json(self,obj,status=200):
         body=json.dumps(obj,ensure_ascii=False).encode(); self.send_response(status); self.send_header('Content-Type','application/json; charset=utf-8'); self.send_header('Content-Length',str(len(body))); self.end_headers(); self.wfile.write(body)
     def do_GET(self):
+        if self.path=='/healthz': return self.send_json({'status':'ok'})
         if self.path=='/api/demo': return self.send_json(load(ROOT/'data/demo.json'))
         return super().do_GET()
     def do_POST(self):
@@ -14,10 +15,12 @@ class Handler(SimpleHTTPRequestHandler):
             if n>1_000_000: return self.send_json({'error':'请求过大'},413)
             d=json.loads(self.rfile.read(n))
             if self.path=='/api/grade':
+                if os.getenv('PORT') and d.get('engine','demo') != 'demo': return self.send_json({'error':'公开演示仅支持离线规则引擎'},403)
+                if len(d.get('answers',[]))>100: return self.send_json({'error':'每次最多处理100份作答'},400)
                 rows=[grade(d['task'],a,d['rubric'],d.get('mode','calibrated'),d.get('engine','demo')) for a in d['answers']]; return self.send_json(rows)
             if self.path=='/api/review': return self.send_json(record_review(d['result'],d['score'],d['reason'],d['scope']))
             return self.send_json({'error':'not found'},404)
         except Exception as e: return self.send_json({'error':str(e)},400)
 def main():
-    p=argparse.ArgumentParser(); p.add_argument('--port',type=int,default=8765); a=p.parse_args(); server=ThreadingHTTPServer(('127.0.0.1',a.port),partial(Handler,directory=str(ROOT/'web'))); print(f'http://127.0.0.1:{a.port}',flush=True); server.serve_forever()
+    p=argparse.ArgumentParser(); p.add_argument('--port',type=int,default=int(os.getenv('PORT','8765'))); p.add_argument('--host',default='0.0.0.0' if os.getenv('PORT') else '127.0.0.1'); a=p.parse_args(); server=ThreadingHTTPServer((a.host,a.port),partial(Handler,directory=str(ROOT/'web'))); print(f'http://{a.host}:{a.port}',flush=True); server.serve_forever()
 if __name__=='__main__': main()
