@@ -2,6 +2,7 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from functools import partial
 import json, argparse, os
 from .core import ROOT, load, grade, record_review
+from .calibration import calibrate
 def public_demo():
     return bool(os.getenv('PORT') or os.getenv('TEACHERLENS_PUBLIC_DEMO') == '1')
 
@@ -22,6 +23,9 @@ class Handler(SimpleHTTPRequestHandler):
             n=int(self.headers.get('Content-Length','0'))
             if n>1_000_000: return self.send_json({'error':'请求过大'},413)
             d=json.loads(self.rfile.read(n))
+            if self.path=='/api/calibrate':
+                demo=load(ROOT/'data/demo.json')
+                return self.send_json(calibrate(demo['rubric'],d['decisions'],d['task_id']))
             if self.path=='/api/grade':
                 if public_demo() and d.get('engine','demo') != 'demo': return self.send_json({'error':'公开演示仅支持离线规则引擎'},403)
                 if len(d.get('answers',[]))>100: return self.send_json({'error':'每次最多处理100份作答'},400)

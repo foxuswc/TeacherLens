@@ -75,7 +75,7 @@ def grade(task, answer, rubric, mode='calibrated', engine='demo'):
         if cid not in actual:
             flags.append(cid+': 缺少评分维度'); actual[cid]={'id':cid,'name':c['name'],'max':c['max'],'score':None,'evidence':'','reason':'待人工评阅'}
     total = sum(x['score'] for x in actual.values()) if all(x['score'] is not None for x in actual.values()) else None
-    return {'id':answer['id'],'text':answer['text'],'criteria':list(actual.values()),'score':total,'max':sum(c['max'] for c in expected.values()),'needs_review':bool(flags or raw.get('needs_review',True) or answer.get('ambiguous')),'flags':flags,'feedback':str(raw.get('feedback','')),'rule_version':rubric['version'],'mode':mode,'engine':engine,'status':'draft'}
+    return {'id':answer['id'],'text':answer['text'],'criteria':list(actual.values()),'score':total,'max':sum(c['max'] for c in expected.values()),'needs_review':bool(flags or raw.get('needs_review',True) or answer.get('ambiguous') or rubric.get('force_review')),'flags':flags,'feedback':str(raw.get('feedback','')),'rule_version':rubric['version'],'mode':mode,'engine':engine,'status':'draft'}
 
 def record_review(result, score, reason, scope='single'):
     if type(score) is not int or not 0<=score<=result['max']: raise ValueError('确认分数越界')
