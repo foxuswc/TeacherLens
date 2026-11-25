@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.env
+.env.*
+outputs/
+private-data/
+*.sqlite
+.DS_Store

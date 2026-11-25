@@ -1,0 +1,9 @@
+﻿id,reference_score,baseline,rubric,calibrated,review,flags
+S02,2,0,2,2,True,
+S04,0,0,0,0,True,
+S05,4,0,0,2,True,
+S06,0,2,4,4,True,
+S07,2,0,2,2,True,
+S09,2,0,2,2,True,
+S10,2,0,0,2,True,
+S12,0,0,0,0,True,
