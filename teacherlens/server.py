@@ -3,6 +3,7 @@ from functools import partial
 import json, argparse, os
 from .core import ROOT, load, grade, record_review
 from .calibration import calibrate
+from .review import summarize
 def public_demo():
     return bool(os.getenv('PORT') or os.getenv('TEACHERLENS_PUBLIC_DEMO') == '1')
 
@@ -30,6 +31,7 @@ class Handler(SimpleHTTPRequestHandler):
                 if public_demo() and d.get('engine','demo') != 'demo': return self.send_json({'error':'公开演示仅支持离线规则引擎'},403)
                 if len(d.get('answers',[]))>100: return self.send_json({'error':'每次最多处理100份作答'},400)
                 rows=[grade(d['task'],a,d['rubric'],d.get('mode','calibrated'),d.get('engine','demo')) for a in d['answers']]; return self.send_json(rows)
+            if self.path=='/api/summary': return self.send_json(summarize(d['rows'],d['reviews']))
             if self.path=='/api/review': return self.send_json(record_review(d['result'],d['score'],d['reason'],d['scope']))
             return self.send_json({'error':'not found'},404)
         except Exception as e: return self.send_json({'error':'请求处理失败，请检查输入。' if public_demo() else str(e)},400)
