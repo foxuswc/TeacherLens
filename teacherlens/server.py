@@ -4,6 +4,7 @@ import json, argparse, os
 from .core import ROOT, load, grade, record_review
 from .calibration import calibrate
 from .review import summarize
+from .evaluation import benchmark
 def public_demo():
     return bool(os.getenv('PORT') or os.getenv('TEACHERLENS_PUBLIC_DEMO') == '1')
 
@@ -17,6 +18,7 @@ class Handler(SimpleHTTPRequestHandler):
     def do_GET(self):
         if self.path=='/healthz': return self.send_json({'status':'ok'})
         if self.path=='/api/config': return self.send_json({'public_demo':public_demo(),'llm_available':not public_demo() and bool(os.getenv('TEACHERLENS_API_KEY') or os.getenv('DASHSCOPE_API_KEY'))})
+        if self.path=='/api/evaluation': return self.send_json(benchmark(load(ROOT/'data/demo.json')))
         if self.path=='/api/demo': return self.send_json(load(ROOT/'data/demo.json'))
         return super().do_GET()
     def do_POST(self):
