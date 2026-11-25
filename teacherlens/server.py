@@ -15,7 +15,13 @@ class Handler(SimpleHTTPRequestHandler):
         super().end_headers()
     def send_json(self,obj,status=200):
         body=json.dumps(obj,ensure_ascii=False).encode(); self.send_response(status); self.send_header('Content-Type','application/json; charset=utf-8'); self.send_header('Content-Length',str(len(body))); self.end_headers(); self.wfile.write(body)
+    def download_text(self,path,name):
+        body=path.read_bytes(); self.send_response(200); self.send_header('Content-Type','application/octet-stream'); self.send_header('Content-Disposition',f'attachment; filename="{name}"'); self.send_header('Content-Length',str(len(body))); self.end_headers(); self.wfile.write(body)
     def do_GET(self):
+        if self.path=='/api/download/skill': return self.download_text(ROOT/'skills/teacher-evaluation/SKILL.md','SKILL.md')
+        if self.path=='/api/download/pilot': return self.download_text(ROOT/'docs/PILOT_KIT.md','PILOT_KIT.md')
+        if self.path=='/api/download/interview': return self.download_text(ROOT/'docs/interview-template.csv','interview-template.csv')
+        if self.path=='/api/download/issues': return self.download_text(ROOT/'docs/issue-template.csv','issue-template.csv')
         if self.path=='/healthz': return self.send_json({'status':'ok'})
         if self.path=='/api/config': return self.send_json({'public_demo':public_demo(),'llm_available':not public_demo() and bool(os.getenv('TEACHERLENS_API_KEY') or os.getenv('DASHSCOPE_API_KEY'))})
         if self.path=='/api/evaluation': return self.send_json(benchmark(load(ROOT/'data/demo.json')))
