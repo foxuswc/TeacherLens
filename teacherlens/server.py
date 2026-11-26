@@ -1,6 +1,7 @@
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from functools import partial
 import json, argparse, os
+from . import __version__
 from .core import ROOT, load, grade, record_review
 from .calibration import calibrate
 from .review import summarize
@@ -22,7 +23,7 @@ class Handler(SimpleHTTPRequestHandler):
         if self.path=='/api/download/pilot': return self.download_text(ROOT/'docs/PILOT_KIT.md','PILOT_KIT.md')
         if self.path=='/api/download/interview': return self.download_text(ROOT/'docs/interview-template.csv','interview-template.csv')
         if self.path=='/api/download/issues': return self.download_text(ROOT/'docs/issue-template.csv','issue-template.csv')
-        if self.path=='/healthz': return self.send_json({'status':'ok'})
+        if self.path=='/healthz': return self.send_json({'status':'ok','version':__version__})
         if self.path=='/api/config': return self.send_json({'public_demo':public_demo(),'llm_available':not public_demo() and bool(os.getenv('TEACHERLENS_API_KEY') or os.getenv('DASHSCOPE_API_KEY'))})
         if self.path=='/api/evaluation': return self.send_json(benchmark(load(ROOT/'data/demo.json')))
         if self.path=='/api/demo': return self.send_json(load(ROOT/'data/demo.json'))
